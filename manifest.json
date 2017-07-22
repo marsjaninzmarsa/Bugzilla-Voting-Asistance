@@ -6,25 +6,34 @@
 	"short_name": "Voting Bugzilla",
 	"version": "0.0.1",
 	"author": "Kuba Niewiarowski",
-	// "homepage_url": "https://github.com/mkstn/follow-me-or-not",
-
-	// "icons": {
-	// 	"256": "assets/images/icon.png"
-	// },
 
 	"permissions": [
 		"*://bugzilla.mozilla.org/*"
 	],
 
+	"background": {
+		"scripts": [
+			"js/jquery-3.2.1.min.js",
+			"js/background.js"
+		]
+	},
+
 	"content_scripts": [
 		{
 			"matches": [
-				"*://bugzilla.mozilla.org/*"
+				"*://bugzilla.mozilla.org/show_bug.cgi*"
 			],
 			"js": [
 				"js/jquery-3.2.1.min.js",
 				"js/bugzilla-voting-assistance.js"
+			],
+			"css": [
+				"css/inject.css"
 			]
 		}
+	],
+
+	"web_accessible_resources": [
+		"css/inject.css"
 	]
 }

@@ -4,56 +4,137 @@ $(function() {
 	var quota, message;
 	// BUGZILLA = $.parseJSON($('#bugzilla-global').data('bugzilla'));
 	$parent = $('#vote-btn').parent();
-	$('#vote-btn').remove();
-	$parent.append(
-		$('<button>', {
-			id:    'vote-toggle',
-			class: 'minor',
-			type:  'button',
+	$parent.empty();
+
+	var $votes   = $('<span>', {class: 'votes'});
+	var $message = $('<span>', {class: 'message'});
+	var $quota   = $('<span>', {class: 'quota'});
+
+	var $button = $('<button>', {
+		id:       'vote-toggle',
+		class:    'minor initializing',
+		type:     'button',
+		disabled: 'disabled'
+	}).data('state', 'initializing')
+		.append($('<span>', {
+			class: 'initializing-text',
+			text:  'Initializing voting...'
+		}))
+		.append($('<span>', {
+			class: 'voting-text',
+			text:  'Submitting vote...'
+		}))
+		.append($('<span>', {
+			class: 'vote-text',
 			text:  'Vote'
-		}).click(function(e) {
+		}))
+		.append($('<span>', {
+			class: 'remove-vote-text',
+			text:  'Remove vote'
+		}))
+		.click((e) => {
 			e.preventDefault();
-			$.ajax({
-				url: 'https://bugzilla.mozilla.org/page.cgi', //page.cgi?id=voting/user.html&bug_id=1145899#vote_1145899
-				data: {
-					id: 'voting/user.html',
-					bug_id: bug_id
+			$message.text('');
+			foo = {
+				initializing: () => {},
+				voting: () => {},
+				vote: () => {
+					browser.runtime.sendMessage({
+						from:    'content',
+						subject: 'toggleVote',
+						params: {
+							id:   bug_id,
+							vote: $button.hasClass('vote')
+						}
+					}).then(
+						(status) => {
+							console.log(status);
+							updateCounter(bug_id);
+							state = (status.voted) ? 'remove-vote' : 'vote';
+							$button
+								.prop('disabled', false)
+								.data('state', 'vote')
+								.attr('class', 'minor')
+								.addClass(state);
+							$message.text(status.message);
+							$quota.text(status.quota);
+						},
+						(reason) => {
+							console.log(reason);
+						}
+					);
+					$button
+						.prop('disabled', true)
+						.data('state', 'voting')
+						.attr('class', 'minor voting');
 				}
-			})
-			.done(function(voting) {
-				console.log("success");
-				console.log(voting);
-				var $form  = $(voting).find('form[name=voting_form]');
-				var $issue = $form.find(`input[name=${bug_id}]`);
-				$issue.prop('checked', !$issue.is(':checked'));
-				console.log($form.serialize());
-				$.ajax({
-					// url: '/path/to/file',
-					type: 'POST',
-					$form.serialize(),
-				})
-				.done(function(voting) {
-					console.log("success");
-					$form   = $(voting).find('form[name=voting_form]');
-					quota   = $form.find('.bz_bug_being_voted_on').nextAll('tr').children('td[colspan=3]').first().text();
-					message = $(voting).find('.votes_change_saved').text();
-				})
-				.fail(function() {
-					console.log("error");
-				})
-				.always(function() {
-					console.log("complete");
-				});
+			}[$button.data('state')]();
+		});
 
-			})
-			.fail(function() {
-				console.log("error");
-			})
-			.always(function(a, b, c) {
-				console.log("complete");
-				console.log([a,b,c]);
-			});
+	$parent.append([$votes, $button, $message, $quota, $(`
+<style>
+		#vote-toggle span {
+			display: none;
+		}
+		#vote-toggle.initializing .initializing-text,
+		#vote-toggle.vote .vote-text,
+		#vote-toggle.remove-vote .remove-vote-text,
+		#vote-toggle.voting .voting-text {
+			display: inline;
+		}
 
-		})
+		#vote-toggle .initializing-text::before,
+		#vote-toggle .voting-text::before {
+			content: url("https://bugzilla.mozilla.org/extensions/BugModal/web/throbber.gif");
+		}
+</style>
+		`)]);
+
+	browser.runtime.sendMessage({
+		from:    'content',
+		subject: 'checkVotingState',
+		params: {
+			id: bug_id
+		}
+	}).then(
+		(status) => {
+			console.log(status);
+			updateCounter(bug_id);
+			state = (status.voted) ? 'remove-vote' : 'vote';
+			$button
+				.prop('disabled', false)
+				.data('state', 'vote')
+				.attr('class', 'minor')
+				.addClass(state);
+			$quota.text(status.quota);
+		},
+		(reason) => {
+			console.log(reason);
+		}
 	);
+
+	function updateCounter(id) {
+		browser.runtime.sendMessage({
+			from:    'content',
+			subject: 'countVotes',
+			params:  id
+		}).then(
+			(votes) => {
+				this.votes = votes;
+				$votes.text(() => {
+					votes = this.votes;
+					if(votes > 1) {
+						return `${votes} votes`;
+					}
+					if(votes == 1) {
+						return `${votes} vote`;
+					}
+					return 'No votes';
+				});
+			},
+			(reason) => {
+				console.log(reason);
+			}
+		);
+	}
 });

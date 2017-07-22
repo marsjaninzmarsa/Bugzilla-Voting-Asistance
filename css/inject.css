@@ -1,0 +1,14 @@
+#vote-toggle span {
+	display: none;
+}
+#vote-toggle.initializing .initializing-text,
+#vote-toggle.vote .vote-text,
+#vote-toggle.remove-vote .remove-vote-text,
+#vote-toggle.voting .voting-text {
+	display: inline;
+}
+
+#vote-toggle .initializing-text::before,
+#vote-toggle .voting-text::before {
+	content: url("https://bugzilla.mozilla.org/extensions/BugModal/web/throbber.gif");
+}
