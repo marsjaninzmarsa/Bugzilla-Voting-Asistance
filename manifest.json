@@ -2,10 +2,11 @@
 	"manifest_version": 2,
 
 	"name": "Voting assistant for Bugzilla",
-	"description": "Check if the GitHub profile you are visiting, follows you or not in a Twitter-like UI",
+	"description": "Web Extension for user-friendly, one-click voting on Mozilla Bugzilla",
 	"short_name": "Voting Bugzilla",
 	"version": "0.0.1",
 	"author": "Kuba Niewiarowski",
+	"homepage_url": "https://github.com/marsjaninzmarsa/Bugzilla-Voting-Asistance/",
 
 	"permissions": [
 		"*://bugzilla.mozilla.org/*"
