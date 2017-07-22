@@ -13,7 +13,7 @@
 
 	"background": {
 		"scripts": [
-			"js/jquery-3.2.1.min.js",
+			"inc/js/jquery-3.2.1.min.js",
 			"js/background.js"
 		]
 	},
@@ -24,8 +24,8 @@
 				"*://bugzilla.mozilla.org/show_bug.cgi*"
 			],
 			"js": [
-				"js/jquery-3.2.1.min.js",
-				"js/bugzilla-voting-assistance.js"
+				"inc/js/jquery-3.2.1.min.js",
+				"js/inject.js"
 			],
 			"css": [
 				"css/inject.css"

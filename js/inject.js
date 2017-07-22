@@ -23,6 +23,7 @@ $(function() {
 		.append($('<span>', {
 			class: 'voting-text',
 			text:  'Submitting vote...'
+			"exceeded "
 		}))
 		.append($('<span>', {
 			class: 'vote-text',
