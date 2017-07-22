@@ -1,4 +1,5 @@
 var queue = [];
+var current;
 var actions = {
 	checkVotingState: checkVotingState,
 	toggleVote:       toggleVote,
@@ -53,55 +54,65 @@ function checkVotingState(params) {
 function toggleVote(params) {
 	this.params = params;
 	return new Promise((resolve, reject) => {
-
-		checkVotingState(this.params).then(
-			(state) => {
-				console.log(state);
-				state.$issue.prop('checked', state.params.vote);
-				$.ajax({
-					url: `https://bugzilla.mozilla.org/page.cgi?id=voting/user.html&bug_id=${state.params.id}`,
-					type: 'POST',
-					data: state.$form.serialize()
-				}).then(
-					(data, status, xhr) => {
-						$form   = $(data).find('form[name=voting_form]');
-						$row    = $form.find('.bz_bug_being_voted_on');
-						$issue  = $row.find(`input`);
-						checked = $issue.is(':checked');
-						quota   = $row.nextAll('tr').children('td[colspan=3]').first().text();
-						message = $(data).find('.votes_change_saved').text();
-						console.log([
-							$form,
-							$row,
-							$issue,
-							checked,
-							quota,
-							message,
-							data,
-							status,
-							xhr
-						]);
-						resolve({
-							message: message,
-							quota:   quota,
-							voted:   checked
-						});
-					},
-					(xhr, status, error) => {
-						reject({
-							xhr: xhr,
-							status: status,
-							error: error
-						});
-					}
-				);
-			},
-			(reason) => {
-				reason.params = this.params;
-				reject(reason);
-			}
-		);
+		queue.push({
+			params: this.params,
+			resolve: resolve,
+			reject: reject
+		});
+		tryQueue();
 	});
+}
+
+function tryQueue() {
+	if(current || !queue.length) {
+		return;
+	}
+	current = queue.shift();
+	$.extend(this, current);
+
+	checkVotingState(this.params).then(
+		(state) => {
+			state.$issue.prop('checked', state.params.vote);
+			$.ajax({
+				url: `https://bugzilla.mozilla.org/page.cgi?id=voting/user.html&bug_id=${state.params.id}`,
+				type: 'POST',
+				data: state.$form.serialize()
+			}).then(
+				(data, status, xhr) => {
+					$form   = $(data).find('form[name=voting_form]');
+					$row    = $form.find('.bz_bug_being_voted_on');
+					$issue  = $row.find(`input`);
+					checked = $issue.is(':checked');
+					quota   = $row.nextAll('tr').children('td[colspan=3]').first().text();
+					message = $(data).find('.votes_change_saved').text();
+					this.resolve({
+						message: message,
+						quota:   quota,
+						voted:   checked
+					});
+					tryNext();
+				},
+				(xhr, status, error) => {
+					this.reject({
+						xhr: xhr,
+						status: status,
+						error: error
+					});
+					tryNext();
+				}
+			);
+		},
+		(reason) => {
+			reason.params = this.params;
+			this.reject(reason);
+			tryNext();
+		}
+	);
+}
+
+function tryNext() {
+	current = null;
+	tryQueue();
 }
 
 function countVotes(id) {

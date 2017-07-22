@@ -7,8 +7,8 @@ Replacing original messy, abstruse voting flow (_Vote_ → _Select checkbox_ →
 1. [x] Making and revoking votes without leaving page
 2. [x] Vote count per issue, avaliable votes per project
 3. [x] Should work in any browser compatible with Web Extensions (releases for Firefox, Chrome/-ium, Opera soon)
+4. [x] Sending votes in queue (prevents losing votes during simultaneous lists exchanges)
 
 ## Todo:
 1. [ ] Exceptions handling (network errors, expired session, voting quota exceeded etc.)
-2. [ ] Sending votes in queue (prevents losing votes during simultaneous lists exchanges)
-3. [ ] Marketpaces and promo
+2. [ ] Marketpaces and promo
